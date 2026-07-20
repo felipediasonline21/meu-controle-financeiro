@@ -40,34 +40,57 @@ body {
 }
 
 .login-card h1 { margin-top: 0; color: var(--accent-color); font-size: 1.8em; }
-.login-card p { color: #666; margin-bottom: 30px; }
+.login-card p { color: #666; margin-bottom: 25px; }
 
-.btn-google {
+#formLogin {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    background-color: white;
-    color: #444;
-    border: 1px solid #ddd;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-login {
+    font-family: 'Nunito', sans-serif;
     padding: 12px;
-    border-radius: 8px;
+    border: 2px solid #fff0f5;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input-login:focus { border-color: var(--accent-color); }
+
+.btn-login {
+    font-family: 'Nunito', sans-serif;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
     font-weight: 800;
     font-size: 16px;
     cursor: pointer;
     transition: 0.3s;
+    width: 100%;
 }
+.btn-login:hover { background-color: var(--primary-hover); }
 
-.btn-google:hover {
-    background-color: #f7f7f7;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+.btn-register {
+    font-family: 'Nunito', sans-serif;
+    background-color: transparent;
+    color: var(--accent-color);
+    border: 2px solid var(--accent-color);
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    width: 100%;
 }
-
-.google-icon {
-    width: 24px;
-    height: 24px;
-    margin-right: 10px;
-}
+.btn-register:hover { background-color: var(--bg-color); }
 
 /* ====== ESTILOS DO SISTEMA ====== */
 .sidebar {

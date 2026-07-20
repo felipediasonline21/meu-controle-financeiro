@@ -1,9 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // ==========================================
-// CONFIGURAÇÃO DO FIREBASE (COM SUAS CHAVES)
+// CONFIGURAÇÃO DO FIREBASE COM AS SUAS CHAVES
 // ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyDriBRXuBvCgXs6oZyq5ah_LomvOXw_tTU",
@@ -18,7 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 
 // Variáveis de controle Globais
 let dadosGlobais = {}; 
@@ -26,11 +25,14 @@ let editandoIndex = -1;
 let usuarioLogadoUid = null; 
 
 // ==========================================
-// CONTROLE DE LOGIN / LOGOUT
+// CONTROLE DE LOGIN / LOGOUT (E-MAIL E SENHA)
 // ==========================================
 const loginScreen = document.getElementById('loginScreen');
 const mainApp = document.getElementById('mainApp');
-const btnLoginGoogle = document.getElementById('btnLoginGoogle');
+const formLogin = document.getElementById('formLogin');
+const emailInput = document.getElementById('emailInput');
+const senhaInput = document.getElementById('senhaInput');
+const btnCriarConta = document.getElementById('btnCriarConta');
 const btnSair = document.getElementById('btnSair');
 
 // Listener: Observa se o usuário entrou ou saiu
@@ -47,26 +49,58 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Captura erros silenciosos de redirecionamento em celulares
-getRedirectResult(auth).catch((error) => {
-    alert("Erro ao processar login: " + error.message);
+// Ação de Entrar (Login)
+formLogin.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = emailInput.value;
+    const senha = senhaInput.value;
+    
+    signInWithEmailAndPassword(auth, email, senha)
+        .catch((error) => {
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                alert("E-mail ou senha incorretos.");
+            } else {
+                alert("Erro ao entrar: " + error.message);
+            }
+        });
 });
 
-// AÇÃO CORRIGIDA PARA CELULAR: Redireciona a página inteira em vez de usar Pop-up
-btnLoginGoogle.addEventListener('click', () => {
-    signInWithRedirect(auth, provider);
+// Ação de Criar Conta
+btnCriarConta.addEventListener('click', () => {
+    const email = emailInput.value;
+    const senha = senhaInput.value;
+    
+    if (!email || senha.length < 6) {
+        alert("Preencha seu e-mail e crie uma senha de no mínimo 6 caracteres para se registrar.");
+        return;
+    }
+
+    createUserWithEmailAndPassword(auth, email, senha)
+        .then(() => {
+            alert("Conta criada com sucesso! Bem-vindo(a).");
+        })
+        .catch((error) => {
+            if (error.code === 'auth/email-already-in-use') {
+                alert("Este e-mail já possui uma conta. Por favor, clique em 'Entrar'.");
+            } else {
+                alert("Erro ao criar conta: " + error.message);
+            }
+        });
 });
 
+// Ação de Sair
 btnSair.addEventListener('click', () => {
     signOut(auth).then(() => {
         dadosGlobais = {}; 
+        emailInput.value = '';
+        senhaInput.value = '';
     }).catch((error) => {
         alert("Erro ao sair: " + error.message);
     });
 });
 
 // ==========================================
-// LÓGICA DO CICLO (DIA 15 AO DIA 14)
+// LÓGICA DO CICLO E RESTANTE DO CÓDIGO
 // ==========================================
 function obterCicloAtual() {
     const data = new Date();
@@ -97,9 +131,6 @@ function formatarCicloParaExibicao(chaveCiclo) {
 
 let cicloExibicao = obterCicloAtual();
 
-// ==========================================
-// LISTENER DO BANCO DE DADOS EM TEMPO REAL
-// ==========================================
 function iniciarListenerBancoDeDados() {
     const financasRef = ref(db, `financasGlobais/${usuarioLogadoUid}`);
 
@@ -125,9 +156,6 @@ function salvarDadosNoBanco() {
     }
 }
 
-// ==========================================
-// INTERFACE E RENDERIZAÇÃO
-// ==========================================
 const paletaRosas = [
     '#ffb6c1', '#ff69b4', '#ff1493', '#db7093', '#c71585', 
     '#ffc0cb', '#ff82ab', '#ff34b3', '#e066ff', '#da70d6', 
