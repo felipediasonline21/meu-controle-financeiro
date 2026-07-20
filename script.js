@@ -1,18 +1,18 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // ==========================================
-// SUAS CHAVES DO FIREBASE CONFIGURADAS
+// CONFIGURAÇÃO DO FIREBASE (COM SUAS CHAVES)
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyDriBRXuBvCgXs6oZyq5ah_LomvOXw_tTU",
-  authDomain: "controle-financeiro-677ac.firebaseapp.com",
-  databaseURL: "https://controle-financeiro-677ac-default-rtdb.firebaseio.com",
-  projectId: "controle-financeiro-677ac",
-  storageBucket: "controle-financeiro-677ac.firebasestorage.app",
-  messagingSenderId: "344728121274",
-  appId: "1:344728121274:web:2e2626e86446f56bd73783"
+    apiKey: "AIzaSyDriBRXuBvCgXs6oZyq5ah_LomvOXw_tTU",
+    authDomain: "controle-financeiro-677ac.firebaseapp.com",
+    databaseURL: "https://controle-financeiro-677ac-default-rtdb.firebaseio.com",
+    projectId: "controle-financeiro-677ac",
+    storageBucket: "controle-financeiro-677ac.firebasestorage.app",
+    messagingSenderId: "344728121274",
+    appId: "1:344728121274:web:2e2626e86446f56bd73783"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -33,6 +33,7 @@ const mainApp = document.getElementById('mainApp');
 const btnLoginGoogle = document.getElementById('btnLoginGoogle');
 const btnSair = document.getElementById('btnSair');
 
+// Listener: Observa se o usuário entrou ou saiu
 onAuthStateChanged(auth, (user) => {
     if (user) {
         usuarioLogadoUid = user.uid;
@@ -46,10 +47,14 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+// Captura erros silenciosos de redirecionamento em celulares
+getRedirectResult(auth).catch((error) => {
+    alert("Erro ao processar login: " + error.message);
+});
+
+// AÇÃO CORRIGIDA PARA CELULAR: Redireciona a página inteira em vez de usar Pop-up
 btnLoginGoogle.addEventListener('click', () => {
-    signInWithPopup(auth, provider).catch((error) => {
-        alert("Erro ao fazer login: " + error.message);
-    });
+    signInWithRedirect(auth, provider);
 });
 
 btnSair.addEventListener('click', () => {
