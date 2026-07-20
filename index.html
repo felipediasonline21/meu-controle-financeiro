@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Controle Financeiro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- TELA DE LOGIN (E-MAIL E SENHA) -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <h1>Meu Controle Financeiro</h1>
+            <p>Acesse ou crie sua conta com e-mail e senha.</p>
+            
+            <form id="formLogin">
+                <input type="email" id="emailInput" placeholder="Seu e-mail" required class="input-login">
+                <input type="password" id="senhaInput" placeholder="Sua senha (mín. 6 caracteres)" required minlength="6" class="input-login">
+                
+                <button type="submit" id="btnEntrar" class="btn-login">Entrar</button>
+                <button type="button" id="btnCriarConta" class="btn-register">Criar Nova Conta</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APLICAÇÃO PRINCIPAL -->
+    <div id="mainApp" style="display: none; width: 100%;">
+        <button class="menu-toggle" id="menuToggle">☰ Menu</button>
+
+        <aside class="sidebar" id="sidebar">
+            <h2>Meus Ciclos</h2>
+            <div id="listaMeses"></div>
+            <hr style="border: 1px solid var(--primary-color); margin: 20px 0; width: 100%;">
+            <button id="btnSair" class="mes-btn" style="color: #db7093;">Sair da Conta</button>
+        </aside>
+
+        <main class="main-content">
+            <h1 id="tituloMes">Meu Controle Financeiro</h1>
+
+            <div class="container" id="areaFormulario">
+                <div class="card form-container">
+                    <h3 id="tituloFormulario">Adicionar Nova Transação</h3>
+                    <form id="formTransacao">
+                        <div class="input-group">
+                            <label for="tipo">Tipo:</label>
+                            <select id="tipo" required>
+                                <option value="receita">Salário / Receita</option>
+                                <option value="gasto">Gasto do Ciclo (Variável)</option>
+                                <option value="fixa">Conta Fixa do Ciclo</option>
+                                <option value="investimento">Aporte de Investimento (Novo valor)</option>
+                                <option value="rendimento">Rendimento (Lucro do ativo)</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="descricao">Descrição (Ativo ou Conta):</label>
+                            <input type="text" id="descricao" placeholder="Ex: Supermercado, PETR4..." required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="valor">Valor (R$):</label>
+                            <input type="number" id="valor" placeholder="Ex: 150.00" step="0.01" min="0.01" required>
+                        </div>
+
+                        <button type="submit" id="btnSubmit">Adicionar</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="dashboard">
+                    <div class="chart-container">
+                        <h3>Recebido vs Comprometido</h3>
+                        <div id="boxReceitas" class="canvas-box"></div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>Gastos e Fixas</h3>
+                        <div id="boxGastos" class="canvas-box"></div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Investimentos Totais</h3>
+                        <div id="boxInvestimentos" class="canvas-box"></div>
+                    </div>
+                </div>
+
+                <div class="card historico-container">
+                    <h3>Extrato Detalhado</h3>
+                    <div class="table-responsive">
+                        <table id="tabelaHistorico">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th id="colAcoes" style="text-align: center;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoHistorico"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
