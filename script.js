@@ -81,7 +81,6 @@ btnCriarConta.addEventListener('click', () => {
 
 btnSair.addEventListener('click', () => {
     signOut(auth).then(() => {
-        // CORREÇÃO DE VAZAMENTO DE VARIÁVEL: Limpa tudo ao deslogar
         dadosGlobais = {}; 
         userConfig = { tema: 'rosa', tipoCiclo: 'fatura', diaCorte: 15 };
         document.body.className = ''; 
@@ -197,7 +196,6 @@ function iniciarListenerBancoDeDados() {
         if (dadosGlobais.config) {
             userConfig = dadosGlobais.config;
         } else {
-            // Garante o padrão se o usuário for novo
             userConfig = { tema: 'rosa', tipoCiclo: 'fatura', diaCorte: 15 };
             dadosGlobais.config = userConfig;
         }
@@ -207,16 +205,14 @@ function iniciarListenerBancoDeDados() {
         
         let precisaSalvarNoBanco = false;
 
-        // Cria o ciclo atual se não existir
         if (!dadosGlobais[cicloExibicao]) {
             dadosGlobais[cicloExibicao] = {
-                totalReceita: 0, totalFixas: 0, gastosCategorias: {},
+                totalReceita: 0, receitasCategorias: {}, totalFixas: 0, gastosCategorias: {},
                 investimentos: {}, rendimentosTotais: 0, historico: []
             };
             precisaSalvarNoBanco = true;
         }
 
-        // REGRA DE 12 MESES (FIFO)
         const ciclos = Object.keys(dadosGlobais).filter(k => k !== 'config').sort();
         
         if (ciclos.length > 12) {
@@ -280,12 +276,42 @@ function atualizarInterface() {
 
     if (!ehCicloAtual && editandoIndex !== -1) cancelarEdicao();
 
-    // Gráfico 1: Receitas (CORREÇÃO: agora as cores acompanham o tema via 'null')
+    // ==========================================
+    // GRÁFICO 1: TOTAL RECEBIDO (NOVO GRÁFICO)
+    // ==========================================
+    const labelsEntradas = [];
+    const dadosEntradas = [];
+    
+    // Suporte para o objeto novo de receitas categorizadas ou o totalRetroativo antigo
+    if (dadosMes.receitasCategorias && Object.keys(dadosMes.receitasCategorias).length > 0) {
+        labelsEntradas.push(...Object.keys(dadosMes.receitasCategorias));
+        dadosEntradas.push(...Object.values(dadosMes.receitasCategorias));
+    } else if ((dadosMes.totalReceita || 0) > 0) {
+        labelsEntradas.push('Salário / Receitas');
+        dadosEntradas.push(dadosMes.totalReceita);
+    }
+
+    if ((dadosMes.rendimentosTotais || 0) > 0) {
+        labelsEntradas.push('Rendimentos (Investimentos)');
+        dadosEntradas.push(dadosMes.rendimentosTotais);
+    }
+
+    renderizarGrafico('boxEntradas', 'graficoEntradas',
+        labelsEntradas.length ? labelsEntradas : ['Sem recebimentos'],
+        dadosEntradas.length ? dadosEntradas : [1],
+        labelsEntradas.length ? coresTema.slice().reverse() : ['#eee'] 
+    );
+
+    // ==========================================
+    // GRÁFICO 2: RECEBIDO VS COMPROMETIDO
+    // ==========================================
     const totalComprometido = calcularTotal(dadosMes.gastosCategorias || {}) + (dadosMes.totalFixas || 0);
     const sobra = Math.max(0, (dadosMes.totalReceita || 0) - totalComprometido);
     renderizarGrafico('boxReceitas', 'graficoReceitas', ['Comprometido', 'Sobra (Caixa Livre)'], [totalComprometido, sobra], null);
 
-    // Gráfico 2: Gastos
+    // ==========================================
+    // GRÁFICO 3: GASTOS E FIXAS
+    // ==========================================
     const labelsGastos = [...Object.keys(dadosMes.gastosCategorias || {})];
     const dadosGastos = [...Object.values(dadosMes.gastosCategorias || {})];
     if((dadosMes.totalFixas || 0) > 0) {
@@ -298,7 +324,9 @@ function atualizarInterface() {
         labelsGastos.length ? coresTema.slice(0, labelsGastos.length) : ['#eee']
     );
 
-    // Gráfico 3: Investimentos
+    // ==========================================
+    // GRÁFICO 4: INVESTIMENTOS TOTAIS
+    // ==========================================
     const labelsInv = Object.keys(dadosMes.investimentos || {});
     const dadosInv = Object.values(dadosMes.investimentos || {});
     const coresInv = coresTema.slice().reverse().slice(0, labelsInv.length);
@@ -324,11 +352,15 @@ function renderizarHistorico() {
     }
 
     let corAcento = getComputedStyle(document.body).getPropertyValue('--accent-color').trim();
+    let corReceita = getComputedStyle(document.body).getPropertyValue('--primary-color').trim();
 
     for (let i = historico.length - 1; i >= 0; i--) {
         const item = historico[i];
         const tr = document.createElement('tr');
-        let corTexto = (item.tipo === 'gasto' || item.tipo === 'fixa') ? corAcento : '#4a4a4a';
+        
+        // Destaca despesas com a cor de acento e receitas com a cor primária
+        let corTexto = (item.tipo === 'gasto' || item.tipo === 'fixa') ? corAcento : 
+                       (item.tipo === 'receita' || item.tipo === 'rendimento') ? '#2e8b57' : '#4a4a4a';
         
         let acoesHtml = '';
         if (ehCicloAtual) {
@@ -353,7 +385,13 @@ function renderizarHistorico() {
 
 function reverterValores(item) {
     const dadosCiclo = dadosGlobais[cicloExibicao];
-    if (item.tipo === 'receita') dadosCiclo.totalReceita -= item.valor;
+    if (item.tipo === 'receita') {
+        dadosCiclo.totalReceita -= item.valor;
+        if(dadosCiclo.receitasCategorias) {
+            dadosCiclo.receitasCategorias[item.descricao] -= item.valor;
+            if (dadosCiclo.receitasCategorias[item.descricao] <= 0.01) delete dadosCiclo.receitasCategorias[item.descricao];
+        }
+    }
     else if (item.tipo === 'fixa') dadosCiclo.totalFixas -= item.valor;
     else if (item.tipo === 'gasto') {
         dadosCiclo.gastosCategorias[item.descricao] -= item.valor;
@@ -430,6 +468,7 @@ document.getElementById('formTransacao').addEventListener('submit', function(e) 
     const valor = parseFloat(document.getElementById('valor').value);
     
     const dadosCiclo = dadosGlobais[obterCicloAtual()];
+    dadosCiclo.receitasCategorias = dadosCiclo.receitasCategorias || {};
     dadosCiclo.gastosCategorias = dadosCiclo.gastosCategorias || {};
     dadosCiclo.investimentos = dadosCiclo.investimentos || {};
     dadosCiclo.historico = dadosCiclo.historico || [];
@@ -445,7 +484,10 @@ document.getElementById('formTransacao').addEventListener('submit', function(e) 
         dadosCiclo.historico.push({ data: dataFormatada, tipo: tipo, descricao: descricao, valor: valor });
     }
 
-    if (tipo === 'receita') dadosCiclo.totalReceita = (dadosCiclo.totalReceita || 0) + valor;
+    if (tipo === 'receita') {
+        dadosCiclo.totalReceita = (dadosCiclo.totalReceita || 0) + valor;
+        dadosCiclo.receitasCategorias[descricao] = (dadosCiclo.receitasCategorias[descricao] || 0) + valor;
+    }
     else if (tipo === 'fixa') dadosCiclo.totalFixas = (dadosCiclo.totalFixas || 0) + valor;
     else if (tipo === 'gasto') dadosCiclo.gastosCategorias[descricao] = (dadosCiclo.gastosCategorias[descricao] || 0) + valor;
     else if (tipo === 'investimento') dadosCiclo.investimentos[descricao] = (dadosCiclo.investimentos[descricao] || 0) + valor;

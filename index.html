@@ -39,7 +39,6 @@
             <hr style="border: 1px solid var(--primary-color); margin: 20px 0; width: 100%;">
             
             <button id="btnConfig" class="mes-btn" style="color: var(--accent-color);">⚙️ Configurações</button>
-            <!-- CORREÇÃO: Cor do botão Sair agora usa a variável dinâmica -->
             <button id="btnSair" class="mes-btn" style="color: var(--accent-color);">🚪 Sair da Conta</button>
         </aside>
 
@@ -78,6 +77,12 @@
 
             <div class="container">
                 <div class="dashboard">
+                    <!-- GRÁFICO NOVO: Total Recebido -->
+                    <div class="chart-container">
+                        <h3>Total Recebido (Entradas)</h3>
+                        <div id="boxEntradas" class="canvas-box"></div>
+                    </div>
+
                     <div class="chart-container">
                         <h3>Recebido vs Comprometido</h3>
                         <div id="boxReceitas" class="canvas-box"></div>
