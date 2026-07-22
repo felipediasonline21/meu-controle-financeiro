@@ -81,7 +81,9 @@ btnCriarConta.addEventListener('click', () => {
 
 btnSair.addEventListener('click', () => {
     signOut(auth).then(() => {
+        // CORREÇÃO DE VAZAMENTO DE VARIÁVEL: Limpa tudo ao deslogar
         dadosGlobais = {}; 
+        userConfig = { tema: 'rosa', tipoCiclo: 'fatura', diaCorte: 15 };
         document.body.className = ''; 
         emailInput.value = ''; senhaInput.value = '';
     });
@@ -195,6 +197,8 @@ function iniciarListenerBancoDeDados() {
         if (dadosGlobais.config) {
             userConfig = dadosGlobais.config;
         } else {
+            // Garante o padrão se o usuário for novo
+            userConfig = { tema: 'rosa', tipoCiclo: 'fatura', diaCorte: 15 };
             dadosGlobais.config = userConfig;
         }
         
@@ -212,19 +216,16 @@ function iniciarListenerBancoDeDados() {
             precisaSalvarNoBanco = true;
         }
 
-        // ====== NOVA REGRA DE 12 MESES (FIFO) ======
-        // Pega todas as chaves (meses) e ignora a chave 'config'
+        // REGRA DE 12 MESES (FIFO)
         const ciclos = Object.keys(dadosGlobais).filter(k => k !== 'config').sort();
         
         if (ciclos.length > 12) {
-            // Quantidade de ciclos velhos a remover
             const excesso = ciclos.length - 12;
             for (let i = 0; i < excesso; i++) {
                 delete dadosGlobais[ciclos[i]]; 
             }
             precisaSalvarNoBanco = true;
         }
-        // ============================================
 
         if (precisaSalvarNoBanco) {
             set(financasRef, dadosGlobais); 
@@ -279,7 +280,7 @@ function atualizarInterface() {
 
     if (!ehCicloAtual && editandoIndex !== -1) cancelarEdicao();
 
-    // Gráfico 1: Receitas
+    // Gráfico 1: Receitas (CORREÇÃO: agora as cores acompanham o tema via 'null')
     const totalComprometido = calcularTotal(dadosMes.gastosCategorias || {}) + (dadosMes.totalFixas || 0);
     const sobra = Math.max(0, (dadosMes.totalReceita || 0) - totalComprometido);
     renderizarGrafico('boxReceitas', 'graficoReceitas', ['Comprometido', 'Sobra (Caixa Livre)'], [totalComprometido, sobra], null);
