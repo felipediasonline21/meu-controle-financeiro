@@ -23,7 +23,7 @@ const auth = getAuth(app);
 let dadosGlobais = {}; 
 let editandoIndex = -1;
 let usuarioLogadoUid = null; 
-window.graficosInstancias = {}; // GESTOR DE MEMÓRIA PARA OS GRÁFICOS
+window.graficosInstancias = {}; 
 
 // CONFIGURAÇÃO PADRÃO DO USUÁRIO
 let userConfig = {
@@ -253,7 +253,6 @@ function renderizarGrafico(boxId, canvasId, labelsData, valoresData, coresData) 
     const box = document.getElementById(boxId);
     if(!box) return;
 
-    // Destrói o gráfico antigo da memória antes de desenhar o novo
     if (window.graficosInstancias[canvasId]) {
         window.graficosInstancias[canvasId].destroy();
     }
@@ -285,19 +284,29 @@ function atualizarInterface() {
     if (!ehCicloAtual && editandoIndex !== -1) cancelarEdicao();
 
     // ==========================================
-    // GRÁFICO 1: TOTAL RECEBIDO
+    // GRÁFICO 1: TOTAL RECEBIDO (BUG CORRIGIDO)
     // ==========================================
     const labelsEntradas = [];
     const dadosEntradas = [];
+    let somaCategorias = 0;
     
-    if (dadosMes.receitasCategorias && Object.keys(dadosMes.receitasCategorias).length > 0) {
-        labelsEntradas.push(...Object.keys(dadosMes.receitasCategorias));
-        dadosEntradas.push(...Object.values(dadosMes.receitasCategorias));
-    } else if ((dadosMes.totalReceita || 0) > 0) {
-        labelsEntradas.push('Salário / Receitas');
-        dadosEntradas.push(dadosMes.totalReceita);
+    // 1. Puxa as categorias específicas criadas a partir de agora
+    if (dadosMes.receitasCategorias) {
+        for (const [desc, valor] of Object.entries(dadosMes.receitasCategorias)) {
+            labelsEntradas.push(desc);
+            dadosEntradas.push(valor);
+            somaCategorias += valor;
+        }
+    } 
+
+    // 2. Calcula se existe uma "Receita Genérica" antiga que não foi categorizada ainda
+    const totalReceitaGlobal = dadosMes.totalReceita || 0;
+    if (totalReceitaGlobal > somaCategorias + 0.01) { // margem de segurança de 1 centavo
+        labelsEntradas.push('Salário / Receita');
+        dadosEntradas.push(totalReceitaGlobal - somaCategorias);
     }
 
+    // 3. Adiciona os Rendimentos de Investimentos
     if ((dadosMes.rendimentosTotais || 0) > 0) {
         labelsEntradas.push('Rendimentos (Investimentos)');
         dadosEntradas.push(dadosMes.rendimentosTotais);
@@ -317,7 +326,7 @@ function atualizarInterface() {
     renderizarGrafico('boxReceitas', 'graficoReceitas', ['Comprometido', 'Sobra (Caixa Livre)'], [totalComprometido, sobra], null);
 
     // ==========================================
-    // GRÁFICO 3: TOTAL DE SAÍDAS 
+    // GRÁFICO 3: TOTAL DE SAÍDAS
     // ==========================================
     const labelsSaidas = [];
     const dadosSaidas = [];
@@ -383,14 +392,26 @@ function renderizarHistorico() {
         return;
     }
 
-    let corAcento = getComputedStyle(document.body).getPropertyValue('--accent-color').trim();
-
     for (let i = historico.length - 1; i >= 0; i--) {
         const item = historico[i];
         const tr = document.createElement('tr');
         
-        let corTexto = (item.tipo === 'gasto' || item.tipo === 'fixa') ? corAcento : 
-                       (item.tipo === 'receita' || item.tipo === 'rendimento') ? '#2e8b57' : '#4a4a4a';
+        let corTexto = '';
+        let prefixo = '';
+
+        // NOVA REGRA DE CORES UNIVERSAIS NO EXTRATO
+        if (item.tipo === 'gasto' || item.tipo === 'fixa') {
+            corTexto = '#e63946'; // Vermelho elegante
+            prefixo = '- ';
+        } else if (item.tipo === 'investimento') {
+            corTexto = '#4169e1'; // Azul Royal
+            prefixo = '  '; // Sem sinal
+        } else if (item.tipo === 'receita' || item.tipo === 'rendimento') {
+            corTexto = '#2e8b57'; // Verde SeaGreen
+            prefixo = '+ ';
+        } else {
+            corTexto = '#4a4a4a';
+        }
         
         let acoesHtml = '';
         if (ehCicloAtual) {
@@ -406,7 +427,7 @@ function renderizarHistorico() {
             <td>${item.data}</td>
             <td style="text-transform: capitalize;">${item.tipo}</td>
             <td>${item.descricao}</td>
-            <td style="color: ${corTexto}; font-weight: bold;">R$ ${item.valor.toFixed(2)}</td>
+            <td style="color: ${corTexto}; font-weight: bold;">${prefixo}R$ ${item.valor.toFixed(2)}</td>
             ${acoesHtml}
         `;
         tbody.appendChild(tr);
