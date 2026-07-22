@@ -23,6 +23,7 @@ const auth = getAuth(app);
 let dadosGlobais = {}; 
 let editandoIndex = -1;
 let usuarioLogadoUid = null; 
+window.graficosInstancias = {}; // GESTOR DE MEMÓRIA PARA OS GRÁFICOS
 
 // CONFIGURAÇÃO PADRÃO DO USUÁRIO
 let userConfig = {
@@ -238,7 +239,7 @@ function salvarDadosNoBanco() {
 }
 
 // ==========================================
-// INTERFACE E RENDERIZAÇÃO
+// INTERFACE E RENDERIZAÇÃO DE GRÁFICOS
 // ==========================================
 const menuToggle = document.getElementById('menuToggle');
 const sidebar = document.getElementById('sidebar');
@@ -250,6 +251,13 @@ document.querySelector('.main-content').addEventListener('click', () => {
 
 function renderizarGrafico(boxId, canvasId, labelsData, valoresData, coresData) {
     const box = document.getElementById(boxId);
+    if(!box) return;
+
+    // Destrói o gráfico antigo da memória antes de desenhar o novo
+    if (window.graficosInstancias[canvasId]) {
+        window.graficosInstancias[canvasId].destroy();
+    }
+
     box.innerHTML = `<canvas id="${canvasId}"></canvas>`; 
     const ctx = document.getElementById(canvasId).getContext('2d');
     
@@ -258,7 +266,7 @@ function renderizarGrafico(boxId, canvasId, labelsData, valoresData, coresData) 
     
     if (!coresData) coresData = [corAcento, corPrincipal];
 
-    new Chart(ctx, {
+    window.graficosInstancias[canvasId] = new Chart(ctx, {
         type: 'pie',
         data: { labels: labelsData, datasets: [{ data: valoresData, backgroundColor: coresData }] },
         options: { responsive: true, maintainAspectRatio: false }
@@ -295,11 +303,11 @@ function atualizarInterface() {
         dadosEntradas.push(dadosMes.rendimentosTotais);
     }
 
-    renderizarGrafico('boxEntradas', 'graficoEntradas',
-        labelsEntradas.length ? labelsEntradas : ['Sem recebimentos'],
-        dadosEntradas.length ? dadosEntradas : [1],
-        labelsEntradas.length ? coresTema.slice().reverse() : ['#eee'] 
-    );
+    const coresEntradas = labelsEntradas.length > 0 ? coresTema.slice().reverse() : ['#eee'];
+    const labelFinalEntradas = labelsEntradas.length > 0 ? labelsEntradas : ['Sem recebimentos'];
+    const dadosFinalEntradas = dadosEntradas.length > 0 ? dadosEntradas : [1];
+
+    renderizarGrafico('boxEntradas', 'graficoEntradas', labelFinalEntradas, dadosFinalEntradas, coresEntradas);
 
     // ==========================================
     // GRÁFICO 2: RECEBIDO VS COMPROMETIDO
@@ -309,7 +317,7 @@ function atualizarInterface() {
     renderizarGrafico('boxReceitas', 'graficoReceitas', ['Comprometido', 'Sobra (Caixa Livre)'], [totalComprometido, sobra], null);
 
     // ==========================================
-    // GRÁFICO 3: TOTAL DE SAÍDAS (NOVO)
+    // GRÁFICO 3: TOTAL DE SAÍDAS 
     // ==========================================
     const labelsSaidas = [];
     const dadosSaidas = [];
@@ -325,38 +333,40 @@ function atualizarInterface() {
         dadosSaidas.push(totalFixas);
     }
 
-    renderizarGrafico('boxSaidas', 'graficoSaidas', 
-        labelsSaidas.length ? labelsSaidas : ['Sem despesas'],
-        dadosSaidas.length ? dadosSaidas : [1],
-        labelsSaidas.length ? [coresTema[0], coresTema[3]] : ['#eee']
-    );
+    const coresSaidas = labelsSaidas.length > 0 ? [coresTema[0], coresTema[3]] : ['#eee'];
+    const labelFinalSaidas = labelsSaidas.length > 0 ? labelsSaidas : ['Sem despesas'];
+    const dadosFinalSaidas = dadosSaidas.length > 0 ? dadosSaidas : [1];
+
+    renderizarGrafico('boxSaidas', 'graficoSaidas', labelFinalSaidas, dadosFinalSaidas, coresSaidas);
 
     // ==========================================
     // GRÁFICO 4: DETALHAMENTO DE GASTOS E FIXAS
     // ==========================================
     const labelsGastos = [...Object.keys(dadosMes.gastosCategorias || {})];
     const dadosGastos = [...Object.values(dadosMes.gastosCategorias || {})];
+    
     if((dadosMes.totalFixas || 0) > 0) {
         labelsGastos.push('Contas Fixas');
         dadosGastos.push(dadosMes.totalFixas);
     }
-    renderizarGrafico('boxGastos', 'graficoGastos',
-        labelsGastos.length ? labelsGastos : ['Sem gastos'],
-        dadosGastos.length ? dadosGastos : [1],
-        labelsGastos.length ? coresTema.slice(0, labelsGastos.length) : ['#eee']
-    );
+
+    const coresGastos = labelsGastos.length > 0 ? coresTema.slice(0, labelsGastos.length) : ['#eee'];
+    const labelFinalGastos = labelsGastos.length > 0 ? labelsGastos : ['Sem gastos'];
+    const dadosFinalGastos = dadosGastos.length > 0 ? dadosGastos : [1];
+
+    renderizarGrafico('boxGastos', 'graficoGastos', labelFinalGastos, dadosFinalGastos, coresGastos);
 
     // ==========================================
     // GRÁFICO 5: INVESTIMENTOS TOTAIS
     // ==========================================
     const labelsInv = Object.keys(dadosMes.investimentos || {});
     const dadosInv = Object.values(dadosMes.investimentos || {});
-    const coresInv = coresTema.slice().reverse().slice(0, labelsInv.length);
-    renderizarGrafico('boxInvestimentos', 'graficoInvestimentos',
-        labelsInv.length ? labelsInv : ['Sem investimentos'],
-        dadosInv.length ? dadosInv : [1],
-        labelsInv.length ? coresInv : ['#eee']
-    );
+    
+    const coresInv = labelsInv.length > 0 ? coresTema.slice().reverse().slice(0, labelsInv.length) : ['#eee'];
+    const labelFinalInv = labelsInv.length > 0 ? labelsInv : ['Sem investimentos'];
+    const dadosFinalInv = dadosInv.length > 0 ? dadosInv : [1];
+
+    renderizarGrafico('boxInvestimentos', 'graficoInvestimentos', labelFinalInv, dadosFinalInv, coresInv);
 
     renderizarMenuMeses();
     renderizarHistorico();
