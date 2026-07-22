@@ -1,3 +1,4 @@
+/* VARIÁVEIS BASE (ROSA PADRÃO) */
 :root {
     --bg-color: #fff0f5; 
     --card-bg: #ffffff;
@@ -9,6 +10,33 @@
     --border-radius: 16px;
 }
 
+/* TEMA AZUL */
+body.theme-azul {
+    --bg-color: #f0f8ff; 
+    --primary-color: #87cefa; 
+    --primary-hover: #63b8ff; 
+    --accent-color: #4682b4; 
+    --sidebar-bg: #e6f2ff;
+}
+
+/* TEMA VERDE */
+body.theme-verde {
+    --bg-color: #f0fff0; 
+    --primary-color: #98fb98; 
+    --primary-hover: #7cfc00; 
+    --accent-color: #2e8b57; 
+    --sidebar-bg: #e6ffe6;
+}
+
+/* TEMA AMARELO */
+body.theme-amarelo {
+    --bg-color: #fffff0; 
+    --primary-color: #f0e68c; 
+    --primary-hover: #eedd82; 
+    --accent-color: #daa520; 
+    --sidebar-bg: #ffffe0;
+}
+
 body {
     font-family: 'Nunito', sans-serif;
     background-color: var(--bg-color);
@@ -16,6 +44,7 @@ body {
     margin: 0;
     display: flex;
     min-height: 100vh;
+    transition: background-color 0.3s;
 }
 
 /* ====== ESTILOS DA TELA DE LOGIN ====== */
@@ -51,7 +80,7 @@ body {
 .input-login {
     font-family: 'Nunito', sans-serif;
     padding: 12px;
-    border: 2px solid #fff0f5;
+    border: 2px solid var(--sidebar-bg);
     border-radius: 10px;
     font-size: 16px;
     outline: none;
@@ -100,7 +129,7 @@ body {
     box-shadow: 2px 0 10px rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s;
 }
 
 .sidebar h2 { color: var(--accent-color); text-align: center; margin-bottom: 20px; }
@@ -117,13 +146,13 @@ body {
     height: 100vh; overflow-y: auto; box-sizing: border-box; scroll-behavior: smooth; width: 100%;
 }
 
-h1 { color: var(--accent-color); text-align: center; margin-bottom: 20px; font-weight: 800; }
+h1 { color: var(--accent-color); text-align: center; margin-bottom: 20px; font-weight: 800; transition: color 0.3s;}
 
 .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; }
 
 .card {
     background-color: var(--card-bg); border-radius: var(--border-radius); padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-top: 5px solid var(--primary-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-top: 5px solid var(--primary-color); transition: border-color 0.3s;
 }
 
 .form-container h3 { margin-top: 0; color: var(--accent-color); }
@@ -132,17 +161,17 @@ h1 { color: var(--accent-color); text-align: center; margin-bottom: 20px; font-w
 label { font-size: 0.9em; font-weight: 700; margin-bottom: 5px; color: var(--accent-color); }
 
 input, select {
-    font-family: 'Nunito', sans-serif; padding: 12px; border: 2px solid #fff0f5;
+    font-family: 'Nunito', sans-serif; padding: 12px; border: 2px solid var(--bg-color);
     border-radius: 10px; font-size: 16px; outline: none; transition: border-color 0.3s;
 }
 input:focus, select:focus { border-color: var(--accent-color); }
 
-button[type="submit"] {
+button[type="submit"], #btnSalvarConfig {
     font-family: 'Nunito', sans-serif; background-color: var(--primary-color); color: white;
     border: none; padding: 12px 20px; border-radius: 10px; font-weight: 800; font-size: 16px;
     cursor: pointer; transition: 0.2s; height: 48px;
 }
-button[type="submit"]:hover { background-color: var(--primary-hover); }
+button[type="submit"]:hover, #btnSalvarConfig:hover { background-color: var(--primary-hover); }
 
 .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
 .chart-container { background-color: var(--card-bg); border-radius: var(--border-radius); padding: 15px; text-align: center; }
@@ -159,6 +188,16 @@ td { color: #666; }
 .btn-acao:hover { transform: scale(1.2); }
 
 .menu-toggle { display: none; position: fixed; top: 15px; left: 15px; z-index: 1000; background-color: var(--accent-color); border-radius: 8px; color: white; padding: 10px; border: none; font-weight: bold; }
+
+/* MODAL OVERLAY */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); z-index: 2000;
+    display: flex; justify-content: center; align-items: center;
+}
+.modal-content {
+    width: 90%; max-width: 400px; background-color: var(--card-bg);
+}
 
 @media (max-width: 768px) {
     .menu-toggle { display: block; }

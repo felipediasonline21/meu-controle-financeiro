@@ -35,8 +35,11 @@
         <aside class="sidebar" id="sidebar">
             <h2>Meus Ciclos</h2>
             <div id="listaMeses"></div>
+            
             <hr style="border: 1px solid var(--primary-color); margin: 20px 0; width: 100%;">
-            <button id="btnSair" class="mes-btn" style="color: #db7093;">Sair da Conta</button>
+            
+            <button id="btnConfig" class="mes-btn" style="color: var(--accent-color);">⚙️ Configurações</button>
+            <button id="btnSair" class="mes-btn" style="color: #db7093;">🚪 Sair da Conta</button>
         </aside>
 
         <main class="main-content">
@@ -109,6 +112,42 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- MODAL DE CONFIGURAÇÕES -->
+    <div id="modalConfig" class="modal-overlay" style="display: none;">
+        <div class="modal-content card">
+            <h2 style="color: var(--accent-color); margin-top: 0;">⚙️ Configurações</h2>
+            
+            <div class="config-group">
+                <label>Cor do Sistema:</label>
+                <select id="configTema" class="input-login">
+                    <option value="rosa">Rosa (Padrão)</option>
+                    <option value="azul">Azul</option>
+                    <option value="verde">Verde</option>
+                    <option value="amarelo">Amarelo</option>
+                </select>
+            </div>
+
+            <div class="config-group" style="margin-top: 15px;">
+                <label>Formato do Período:</label>
+                <select id="configTipoCiclo" class="input-login">
+                    <option value="mensal">Mês Fechado (Janeiro, Fevereiro...)</option>
+                    <option value="fatura">Personalizado (Data da Fatura)</option>
+                </select>
+            </div>
+
+            <div class="config-group" id="grupoDiaCorte" style="margin-top: 15px;">
+                <label>Dia de Abertura da Fatura:</label>
+                <input type="number" id="configDiaCorte" class="input-login" min="1" max="31" placeholder="Ex: 15">
+                <small style="color: #777; font-size: 0.8em; margin-top: 5px; display: block;">O ciclo terá duração de 30 dias contados a partir desta data.</small>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button id="btnSalvarConfig" style="flex: 1;">Salvar</button>
+                <button id="btnFecharConfig" class="btn-register" style="flex: 1;">Cancelar</button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="script.js"></script>
