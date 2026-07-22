@@ -185,7 +185,7 @@ function formatarCicloParaExibicao(chaveCiclo) {
 let cicloExibicao = obterCicloAtual();
 
 // ==========================================
-// LISTENER E FUNÇÃO DE LIMPEZA (MÁXIMO 12 CICLOS)
+// LISTENER E BD (MÁXIMO 12 CICLOS)
 // ==========================================
 function iniciarListenerBancoDeDados() {
     const financasRef = ref(db, `financasGlobais/${usuarioLogadoUid}`);
@@ -277,12 +277,11 @@ function atualizarInterface() {
     if (!ehCicloAtual && editandoIndex !== -1) cancelarEdicao();
 
     // ==========================================
-    // GRÁFICO 1: TOTAL RECEBIDO (NOVO GRÁFICO)
+    // GRÁFICO 1: TOTAL RECEBIDO
     // ==========================================
     const labelsEntradas = [];
     const dadosEntradas = [];
     
-    // Suporte para o objeto novo de receitas categorizadas ou o totalRetroativo antigo
     if (dadosMes.receitasCategorias && Object.keys(dadosMes.receitasCategorias).length > 0) {
         labelsEntradas.push(...Object.keys(dadosMes.receitasCategorias));
         dadosEntradas.push(...Object.values(dadosMes.receitasCategorias));
@@ -310,7 +309,30 @@ function atualizarInterface() {
     renderizarGrafico('boxReceitas', 'graficoReceitas', ['Comprometido', 'Sobra (Caixa Livre)'], [totalComprometido, sobra], null);
 
     // ==========================================
-    // GRÁFICO 3: GASTOS E FIXAS
+    // GRÁFICO 3: TOTAL DE SAÍDAS (NOVO)
+    // ==========================================
+    const labelsSaidas = [];
+    const dadosSaidas = [];
+    const totalVariaveis = calcularTotal(dadosMes.gastosCategorias || {});
+    const totalFixas = dadosMes.totalFixas || 0;
+
+    if (totalVariaveis > 0) {
+        labelsSaidas.push('Gastos Variáveis');
+        dadosSaidas.push(totalVariaveis);
+    }
+    if (totalFixas > 0) {
+        labelsSaidas.push('Contas Fixas');
+        dadosSaidas.push(totalFixas);
+    }
+
+    renderizarGrafico('boxSaidas', 'graficoSaidas', 
+        labelsSaidas.length ? labelsSaidas : ['Sem despesas'],
+        dadosSaidas.length ? dadosSaidas : [1],
+        labelsSaidas.length ? [coresTema[0], coresTema[3]] : ['#eee']
+    );
+
+    // ==========================================
+    // GRÁFICO 4: DETALHAMENTO DE GASTOS E FIXAS
     // ==========================================
     const labelsGastos = [...Object.keys(dadosMes.gastosCategorias || {})];
     const dadosGastos = [...Object.values(dadosMes.gastosCategorias || {})];
@@ -325,7 +347,7 @@ function atualizarInterface() {
     );
 
     // ==========================================
-    // GRÁFICO 4: INVESTIMENTOS TOTAIS
+    // GRÁFICO 5: INVESTIMENTOS TOTAIS
     // ==========================================
     const labelsInv = Object.keys(dadosMes.investimentos || {});
     const dadosInv = Object.values(dadosMes.investimentos || {});
@@ -352,13 +374,11 @@ function renderizarHistorico() {
     }
 
     let corAcento = getComputedStyle(document.body).getPropertyValue('--accent-color').trim();
-    let corReceita = getComputedStyle(document.body).getPropertyValue('--primary-color').trim();
 
     for (let i = historico.length - 1; i >= 0; i--) {
         const item = historico[i];
         const tr = document.createElement('tr');
         
-        // Destaca despesas com a cor de acento e receitas com a cor primária
         let corTexto = (item.tipo === 'gasto' || item.tipo === 'fixa') ? corAcento : 
                        (item.tipo === 'receita' || item.tipo === 'rendimento') ? '#2e8b57' : '#4a4a4a';
         
