@@ -284,39 +284,16 @@ function atualizarInterface() {
     if (!ehCicloAtual && editandoIndex !== -1) cancelarEdicao();
 
     // ==========================================
-    // GRÁFICO 1: TOTAL RECEBIDO (BUG CORRIGIDO)
+    // GRÁFICO 1: TOTAL RECEBIDO (SOMA TOTAL 100%)
     // ==========================================
-    const labelsEntradas = [];
-    const dadosEntradas = [];
-    let somaCategorias = 0;
-    
-    // 1. Puxa as categorias específicas criadas a partir de agora
-    if (dadosMes.receitasCategorias) {
-        for (const [desc, valor] of Object.entries(dadosMes.receitasCategorias)) {
-            labelsEntradas.push(desc);
-            dadosEntradas.push(valor);
-            somaCategorias += valor;
-        }
-    } 
+    // Agora o gráfico vai somar todas as receitas + rendimentos em uma única fatia.
+    const totalGeralEntradas = (dadosMes.totalReceita || 0) + (dadosMes.rendimentosTotais || 0);
 
-    // 2. Calcula se existe uma "Receita Genérica" antiga que não foi categorizada ainda
-    const totalReceitaGlobal = dadosMes.totalReceita || 0;
-    if (totalReceitaGlobal > somaCategorias + 0.01) { // margem de segurança de 1 centavo
-        labelsEntradas.push('Salário / Receita');
-        dadosEntradas.push(totalReceitaGlobal - somaCategorias);
-    }
-
-    // 3. Adiciona os Rendimentos de Investimentos
-    if ((dadosMes.rendimentosTotais || 0) > 0) {
-        labelsEntradas.push('Rendimentos (Investimentos)');
-        dadosEntradas.push(dadosMes.rendimentosTotais);
-    }
-
-    const coresEntradas = labelsEntradas.length > 0 ? coresTema.slice().reverse() : ['#eee'];
-    const labelFinalEntradas = labelsEntradas.length > 0 ? labelsEntradas : ['Sem recebimentos'];
-    const dadosFinalEntradas = dadosEntradas.length > 0 ? dadosEntradas : [1];
-
-    renderizarGrafico('boxEntradas', 'graficoEntradas', labelFinalEntradas, dadosFinalEntradas, coresEntradas);
+    renderizarGrafico('boxEntradas', 'graficoEntradas',
+        totalGeralEntradas > 0 ? ['Total de Entradas'] : ['Sem recebimentos'],
+        totalGeralEntradas > 0 ? [totalGeralEntradas] : [1],
+        totalGeralEntradas > 0 ? [coresTema[coresTema.length - 1]] : ['#eee'] // Pega uma cor bonita do final da paleta
+    );
 
     // ==========================================
     // GRÁFICO 2: RECEBIDO VS COMPROMETIDO
@@ -326,8 +303,9 @@ function atualizarInterface() {
     renderizarGrafico('boxReceitas', 'graficoReceitas', ['Comprometido', 'Sobra (Caixa Livre)'], [totalComprometido, sobra], null);
 
     // ==========================================
-    // GRÁFICO 3: TOTAL DE SAÍDAS
+    // GRÁFICO 3: TOTAL DE SAÍDAS (DUAS VARIÁVEIS)
     // ==========================================
+    // Aqui mantemos as duas fatias (Variáveis x Fixas) visíveis e clicáveis.
     const labelsSaidas = [];
     const dadosSaidas = [];
     const totalVariaveis = calcularTotal(dadosMes.gastosCategorias || {});
@@ -399,18 +377,18 @@ function renderizarHistorico() {
         let corTexto = '';
         let prefixo = '';
 
-        // NOVA REGRA DE CORES UNIVERSAIS NO EXTRATO
+        // CORES ESTILIZADAS E UNIVERSAIS DO EXTRATO
         if (item.tipo === 'gasto' || item.tipo === 'fixa') {
-            corTexto = '#e63946'; // Vermelho elegante
+            corTexto = '#e63946'; // Vermelho (Gastos)
             prefixo = '- ';
         } else if (item.tipo === 'investimento') {
-            corTexto = '#4169e1'; // Azul Royal
-            prefixo = '  '; // Sem sinal
+            corTexto = '#4169e1'; // Azul (Investimentos)
+            prefixo = '  '; 
         } else if (item.tipo === 'receita' || item.tipo === 'rendimento') {
-            corTexto = '#2e8b57'; // Verde SeaGreen
+            corTexto = '#2e8b57'; // Verde (Entradas)
             prefixo = '+ ';
         } else {
-            corTexto = '#4a4a4a';
+            corTexto = '#4a4a4a'; // Neutro caso haja erro
         }
         
         let acoesHtml = '';
